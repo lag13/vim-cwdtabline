@@ -9,7 +9,8 @@ let g:loaded_cwdtabline = 1
 augroup cwdtabline
     autocmd!
     autocmd TabEnter * call s:update_tabline()
-    autocmd BufLeave * call s:update_tabline()
+    autocmd BufEnter * call s:update_tabline()
+    autocmd WinEnter * call s:update_tabline()
 augroup END
 
 function! s:update_tabline()
@@ -26,5 +27,5 @@ function! s:update_tabline()
         let tabs += [tab]
     endfor
     noautocmd execute "tabnext " . cur_tab
-    let &tabline = '%1X' . join(map(tabs,'printf("%%#%s#%s", v:val.highlight, v:val.label)'), '') . '%#TabLineFill#'
+    let &tabline = join(map(tabs,'printf("%%#%s#%s", v:val.highlight, v:val.label)'), '') . '%#TabLineFill#'
 endfunction
