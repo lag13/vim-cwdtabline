@@ -8,25 +8,13 @@ let g:loaded_cwdtabline = 1
 
 augroup cwdtabline
     autocmd!
-    autocmd TabEnter * let t:cwdtabline = getcwd()
-    autocmd WinEnter * let t:cwdtabline = getcwd()
-    autocmd VimEnter * let t:cwdtabline = getcwd()
     autocmd TabEnter * call s:update_tabline()
     autocmd WinEnter * call s:update_tabline()
     autocmd CmdwinEnter * nnoremap <buffer> <CR> <C-c><C-\>e<SID>update_tabline_after_command()<CR><CR>
-    " This mapping works except it seems like endwise is making a mapping in command
-    " line mode insert as well which is throwing it off
+    " This mapping works except for endwise which maps <CR> in the command
+    " line window to its normal function:
     " autocmd CmdwinEnter * inoremap <buffer> <CR> <C-c><C-\>e<SID>update_tabline_after_command()<CR><CR>
 augroup END
-
-" TODO: The only case left where things don't work as expected is when issuing
-" the :cd command. The :cd command can change the directory of multiple
-" windows so I need to somehow update multiple t:cwdtabline variables. I feel
-" like this might not be possible. It brings us back to the original issue I
-" had where I cannot find out the cwd() of the active window of another tab
-" without first going to that tab which I believe I cannot do because of the
-" command line window. Or can we? <C-c> brings us out of the command line
-" window so maybe tabnext's are free game?
 
 cnoremap <CR> <C-\>e<SID>update_tabline_after_command()<CR><CR>
 
@@ -38,11 +26,13 @@ function! s:update_tabline()
     let cur_tab = tabpagenr()
     let tabs = []
     for t in range(1, tabpagenr('$'))
-        let cwd = gettabvar(t, 'cwdtabline')
+        execute "noautocmd tabnext " . t
+        let cwd = getcwd()
         let tab = { 'label': ' ' . fnamemodify(cwd, ':t') . ' ' }
         let tab.highlight = cur_tab == t ? '%#TabLineSel#' : '%#TabLine#'
         let tabs += [tab]
     endfor
+    execute "noautocmd tabnext " . cur_tab
     let &tabline = join(map(tabs,'printf("%s%s", v:val.highlight, v:val.label)'), '') . '%#TabLineFill#'
 endfunction
 
@@ -59,7 +49,7 @@ endfun
 " the tabline. If vim had a CmdFinished event or something similar then there
 " would be no need for all this nonsense and I could just add another
 " autocommd.
-let s:call_update_tabline = " | let t:cwdtabline = getcwd() | call <SNR>" . s:sid() . "_update_tabline()"
+let s:call_update_tabline = " | call <SNR>" . s:sid() . "_update_tabline()"
 
 function! s:update_tabline_after_command()
     let cmdline = getcmdline()
