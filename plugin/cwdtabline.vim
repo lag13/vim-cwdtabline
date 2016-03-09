@@ -8,6 +8,9 @@ let g:loaded_cwdtabline = 1
 
 augroup cwdtabline
     autocmd!
+    autocmd TabEnter * let t:cwdtabline = getcwd()
+    autocmd WinEnter * let t:cwdtabline = getcwd()
+    autocmd VimEnter * let t:cwdtabline = getcwd()
     autocmd TabEnter * call s:update_tabline()
     autocmd WinEnter * call s:update_tabline()
 augroup END
@@ -23,14 +26,12 @@ function! s:update_tabline()
     endif
     let cur_tab = tabpagenr()
     let tabs = []
-    for i in range(1, tabpagenr('$'))
-        noautocmd execute "tabnext " . i
-        let cwd = getcwd()
+    for t in range(1, tabpagenr('$'))
+        let cwd = gettabvar(t, 'cwdtabline')
         let tab = { 'label': ' ' . fnamemodify(cwd, ':t') . ' ' }
-        let tab.highlight = cur_tab == i ? '%#TabLineSel#' : '%#TabLine#'
+        let tab.highlight = cur_tab == t ? '%#TabLineSel#' : '%#TabLine#'
         let tabs += [tab]
     endfor
-    noautocmd execute "tabnext " . cur_tab
     let &tabline = join(map(tabs,'printf("%s%s", v:val.highlight, v:val.label)'), '') . '%#TabLineFill#'
 endfunction
 
@@ -38,7 +39,7 @@ endfunction
 " the id number of the current script. I wouldn't need this function at all if
 " I made the update_tabline function global.
 function s:sid()
-  return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_sid$')
+    return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_sid$')
 endfun
 
 " This string gets appended to the command line whenever we do an :lcd or :cd
@@ -47,7 +48,7 @@ endfun
 " the tabline. If vim had a CmdFinished event or something similar then there
 " would be no need for all this nonsense and I could just add another
 " autocommd.
-let s:call_update_tabline = " | call <SNR>" . s:sid() . "_update_tabline()"
+let s:call_update_tabline = " | let t:cwdtabline = getcwd() | call <SNR>" . s:sid() . "_update_tabline()"
 
 function! s:update_tabline_after_command()
     let cmdline = getcmdline()
