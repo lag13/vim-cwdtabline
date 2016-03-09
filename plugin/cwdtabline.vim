@@ -6,14 +6,15 @@ if exists("g:loaded_cwdtabline") || &cp || v:version < 700
 endif
 let g:loaded_cwdtabline = 1
 
+" So my autocommand in insert mode in the command line window takes effect
+runtime! plugin/endwise.vim
+
 augroup cwdtabline
     autocmd!
     autocmd TabEnter * call s:update_tabline()
     autocmd WinEnter * call s:update_tabline()
     autocmd CmdwinEnter * nnoremap <buffer> <CR> <C-c><C-\>e<SID>update_tabline_after_command()<CR><CR>
-    " This mapping works except for endwise which maps <CR> in the command
-    " line window to its normal function:
-    " autocmd CmdwinEnter * inoremap <buffer> <CR> <C-c><C-\>e<SID>update_tabline_after_command()<CR><CR>
+    autocmd CmdwinEnter * inoremap <buffer> <CR> <C-c><C-\>e<SID>update_tabline_after_command()<CR><CR>
 augroup END
 
 cnoremap <CR> <C-\>e<SID>update_tabline_after_command()<CR><CR>
