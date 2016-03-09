@@ -13,9 +13,20 @@ augroup cwdtabline
     autocmd VimEnter * let t:cwdtabline = getcwd()
     autocmd TabEnter * call s:update_tabline()
     autocmd WinEnter * call s:update_tabline()
+    autocmd CmdwinEnter * nnoremap <buffer> <CR> <C-c><C-\>e<SID>update_tabline_after_command()<CR><CR>
+    " This mapping works except it seems like endwise is making a mapping in command
+    " line mode insert as well which is throwing it off
+    " autocmd CmdwinEnter * inoremap <buffer> <CR> <C-c><C-\>e<SID>update_tabline_after_command()<CR><CR>
 augroup END
 
-" TODO: Get this to work for commands run in the command line window
+" TODO: The only case left where things don't work as expected is when issuing
+" the :cd command. The :cd command can change the directory of multiple
+" windows so I need to somehow update multiple t:cwdtabline variables. I feel
+" like this might not be possible. It brings us back to the original issue I
+" had where I cannot find out the cwd() of the active window of another tab
+" without first going to that tab which I believe I cannot do because of the
+" command line window. Or can we? <C-c> brings us out of the command line
+" window so maybe tabnext's are free game?
 
 cnoremap <CR> <C-\>e<SID>update_tabline_after_command()<CR><CR>
 
