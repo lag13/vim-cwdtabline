@@ -26,15 +26,36 @@ function! s:update_tabline()
     endif
     let cur_tab = tabpagenr()
     let tabs = []
+    let prev_label = ""
     for t in range(1, tabpagenr('$'))
         execute "noautocmd tabnext " . t
-        let cwd = getcwd()
-        let tab = { 'label': ' ' . fnamemodify(cwd, ':t') . ' ' }
+        let [label, prev_label] = s:getlabel(getcwd(), prev_label)
+        let tab = { 'label': ' ' . label . ' ' }
         let tab.highlight = cur_tab == t ? '%#TabLineSel#' : '%#TabLine#'
         let tabs += [tab]
     endfor
     execute "noautocmd tabnext " . cur_tab
     let &tabline = join(map(tabs,'printf("%s%s", v:val.highlight, v:val.label)'), '') . '%#TabLineFill#'
+endfunction
+
+function s:getlabel(cwd, prev_label)
+    let last_label = a:prev_label
+    if a:cwd ==# '/'
+        let label = a:cwd
+    else
+        if fnamemodify(a:cwd, ':~') ==# '~/'
+            let label = '~'
+        else
+            let label = fnamemodify(a:cwd, ':t')
+        endif
+    endif
+    if label ==# last_label
+        let last_label = label
+        let label = '"'
+    else
+        let last_label = label
+    endif
+    return [label, last_label]
 endfunction
 
 " This function was taken from the help page on <SID>. What it does is grab
@@ -44,21 +65,23 @@ function s:sid()
     return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_sid$')
 endfun
 
-" This string gets appended to the command line whenever we do an :lcd or :cd
-" command. The reason I do this is so that whenever we run an :lcd or :cd
-" command any changes in the working directory are immediately reflected in
-" the tabline. If vim had a CmdFinished event or something similar then there
-" would be no need for all this nonsense and I could just add another
-" autocommd.
+" This string gets appended to the command line so that commands which should
+" be updating the tabline (:lcd, :cd, :tabmove, etc...) do. The reason I don't
+" try appending this string to every command is because we would lose any
+" output that that command could have. If vim had a CmdFinished event or
+" something similar then there would be no need for all this nonsense and I
+" could just add another autocommd.
 let s:call_update_tabline = " | call <SNR>" . s:sid() . "_update_tabline()"
 
 function! s:update_tabline_after_command()
     let cmdline = getcmdline()
-    if match(cmdline, '\<l\?cd\>') != -1
-        return cmdline . s:call_update_tabline
-    else
-        return cmdline
+    if getcmdtype() ==# ':'
+        let update_tabline_after = ['\<cd\>', '\<lcd\?\>', '\<tabm\(o\|ov\|ove\)\>']
+        if match(cmdline, join(update_tabline_after, '\|')) != -1
+            return cmdline . s:call_update_tabline
+        endif
     endif
+    return cmdline
 endfunction
 
 " Attempts to clean up the history by removing the s:call_update_tabline
