@@ -21,10 +21,6 @@ Hence this plugin was born.
 
 ### TODOS
 
-The things I had to do to get this plugin to work were pretty hacky (remapping
-`<CR>` in command line mode, modifying command line history, etc...) so
-suggestions for improvements would be much appreciated.
-
 There is a plugin for displaying buffers on the tabline:
 https://github.com/ap/vim-buftabline. I'd like to modify cwdtabline so these
 two plugins can work nicely together. I'm picturing that when there is one tab
@@ -35,3 +31,10 @@ and navigating between files with something like `<C-n>` and `<C-p>` (assuming
 they've been remapped to `:bnext` and `:bprev` respectively) might be faster.
 But when multiple tabs get used you'd definitely want to see those tabs
 instead of buffers.
+
+Just shortly after finishing this plugin I was looking at other tabline
+related plugins and learned that tpope's flagship plugin can be used to
+customize the tabline AND has built in functionality to display the cwd for
+each tab. From what I've seen you can't get the last component of the cwd
+which might be fine with me but I wonder what it would take to configure his
+plugin to work exactly like mine does.
